@@ -54,26 +54,6 @@ function startMeUp() {
   chrome.alarms.onAlarm.addListener(loadNextTab);
 
 
-/*
-    chrome.extension.getBackgroundPage().console.log('starting the extension');
-    count = 0;
-    windowId = null; //undefined # window in which TabCarousel was started
-  
-    var ms = 1000;
-
-    chrome.windows.getCurrent (w) =>
-      windowId = w.id
-  
-    //chrome.browserAction.setIcon(path: 'images/icon_32_exp_1.75_stop_emblem.png')
-    //chrome.browserAction.setTitle(title: 'Stop Carousel')
-  
-    continuation = () =>
-      @select(windowId, count)
-      count += 1
-      @lastTimeout = setTimeout(continuation, ms)
-  
-    continuation()
-    */
 }
 
 function tearMeDown() {
@@ -135,28 +115,6 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 
   // user clicked us, update our status based on 
   flipStatus();
-
-
-  
-  /*
-  var viewTabUrl = chrome.extension.getURL('image.html');
-  var imageUrl = "https://lh3.googleusercontent.com/-aD8wHAKhgP0/UDevt-IGWjI/AAAAAAAAA6g/9Sw3qQVTYfM/s426/Mark%2BBouchard%2B-%2BSmall.JPG";
-
-  // Look through all the pages in this extension to find one we can use.
-  var views = chrome.extension.getViews();
-  for (var i = 0; i < views.length; i++) {
-    var view = views[i];
-
-    // If this view has the right URL and hasn't been used yet...
-    if (view.location.href == viewTabUrl && !view.imageAlreadySet) {
-
-      // ...call one of its functions and set a property.
-      view.setImageUrl(imageUrl);
-      view.imageAlreadySet = true;
-      break; // we're done
-    }
-  }
-  */
 
 
 });
