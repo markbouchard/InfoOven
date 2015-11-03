@@ -46,10 +46,7 @@ function setStatus() {
 
 function startMeUp() {
 
-  //setTimeout( "alert('ping')", 5000); // attempt 1
-  chrome.alarms.create("Start", {periodInMinutes: 0.05});
-  
-  chrome.alarms.onAlarm.addListener(loadNextTab);
+  startAlarms(0.05);
 
   // get the open tab for each open window and store it
   saveCurrentTabIds();
@@ -59,9 +56,21 @@ function startMeUp() {
 function tearMeDown() {
   
   //Clears existing alarm
+  clearAlarms();
+    
+}
+
+function startAlarms(interval) {
+
+  //setTimeout( "alert('ping')", 5000); // attempt 1
+  chrome.alarms.create("Start", {periodInMinutes: interval});
+  
+  chrome.alarms.onAlarm.addListener(loadNextTab);
+}
+
+function clearAlarms() {
   chrome.alarms.clearAll();
   chrome.alarms.onAlarm.removeListener(loadNextTab);
-    
 }
 
 function flipStatus() {
@@ -139,15 +148,16 @@ function loadNextTab(alarm) {
                 var tab = tabArr[0];
                 console.log("found an active tab");
                 tabId = tab.id;
-                changeTab(window.id, tabId);
+                changeTab(window.id, tabId, tab.index);
               }
             });
 
             console.log("checking tabId got set");
             if(tabId == -1 && window.tabs.length >0)
             {
-              tabId = window.tabs[0].id;
-              changeTab(window.id, tabId);
+              var tab = tabArr[0];
+              tabId = tab.id;
+              changeTab(window.id, tabId, tab.index);
             }
           }
           else
@@ -155,63 +165,60 @@ function loadNextTab(alarm) {
             var tabId = 0;
             var next = 0;
             var tab;
+
+            // loop through the set of tabs looking for the selected tab
+            // then set the next pointer to either be the next index if it's within bounds, or 0 otherwise
             for(i=0; i < window.tabs.length; i++)
             {
                 tab = window.tabs[i];
-                next = i +1;
-                if(tab.selected && window.tabs.length > next)
+                
+                // we selected and is their a next tab?  if so, set that to be our next tab to see.
+                if(tab.selected && window.tabs.length > i + 1)
                 {
-                  tabId = next;
+                  next = i +1;
                   break;
                 }
             }
 
-            tabId = window.tabs[tabId].id;
+            // get the id for the tab we're about to switch to
+            tabId = window.tabs[next].id;
 
-            changeTab(window.id, tabId);
-            /*
-            console.log("currentTabId != -1, so getting that tab for tabId " + currentTabId);
-            chrome.tabs.query({"windowId": window.id, "index": currentTabId}, function(tabArr)
-            {
-              console.log("got a result for the tab by index query - count = " + tabArr.length);
-              if(tabArr.length == 1)
-              {
-                 var tab = tabArr[0];
-                 var tabIndex = tab.index;
-                 if(tabIndex < numTabs -1)
-                 {
-                    tabId = window.tabs[tabIndex+1].id;
-                    changeTab(window.id, tabId);
-                 }
-                 else
-                 {
-                    tabId = window.tabs[0].id;
-                    changeTab(window.id, tabId);
-                 }
-             }
-            });
-            */
+            // switch that tab kid!
+            changeTab(window.id, tabId, next);
+      
           }
           
         });
       });
       
-
-      // wait for next tab
-      // if last tab in the browswer, reset wait time to MAIN_TAB_DISPLAY_LENGTH
-      // if not first tab in the browser, reset wait time to AUX_TAB_DISPLAY_LENGTH
 }
 
-function changeTab(windowId, tabId) {
+function changeTab(windowId, tabId, indexId) {
   
-  console.log("inside changeTab for window: " + windowId + "and tab: " + tabId);
+  console.log("inside changeTab for window: " + windowId + " and tab: " + tabId + " and indexId = " + indexId);
   if(tabId !== undefined)
   {
     // gotta use the tabId to set it to be selected;
     chrome.tabs.update(tabId, {"selected": true});
 
     // write to memory our last open tabs
-    setCurrentSelectedTab(windowId, tabId);;
+    setCurrentSelectedTab(windowId, tabId);
+
+    if(indexId !== undefined)
+    {
+      clearAlarms();
+      if(indexId == 0)
+      {
+        // update to long timer
+        startAlarms(1);
+
+      }
+      else
+      {
+        // update to short timer
+        startAlarms(0.05);
+      }
+    }
   }
 }
 
