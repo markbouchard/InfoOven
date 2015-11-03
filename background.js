@@ -103,8 +103,39 @@ function flipStatus() {
 }
 
 function loadNextTab(alarm) {
-      //alert("hello");
+    
       chrome.extension.getBackgroundPage().console.log('trigger occurred, switching to the next tab');
+
+      chrome.tabs.query({"currentWindow": true, "windowType": "normal"}, function(tabs) {
+        
+    
+          chrome.extension.getBackgroundPage().console.log('Looping through tabs and tab length = ' + tabs.length);
+          
+      });
+
+      chrome.extension.getBackgroundPage().console.log('Now looping through all windows to get tab counts');
+      
+      chrome.windows.getAll({populate: true}, function(allWindows)
+      {
+        var numWindows = allWindows.length;
+        allWindows.forEach(function(window){
+          window.tabs.forEach(function(tab){
+            
+            //console.log(tab.url);
+
+            // not that tab id does not equal the order in which they are currently displayed, so need to use length or order
+            console.log("window: " + window.id + " | tab: " + tab.id + " | url = " +tab.url);
+          });
+        });
+      });
+      
+
+      // wait for next tab
+      // if last tab in the browswer, reset wait time to MAIN_TAB_DISPLAY_LENGTH
+      // if not first tab in the browser, reset wait time to AUX_TAB_DISPLAY_LENGTH
+
+
+    
 }
 
 // React when a browser action's icon is clicked.
