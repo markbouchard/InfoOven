@@ -106,12 +106,14 @@ function loadNextTab(alarm) {
     
       chrome.extension.getBackgroundPage().console.log('trigger occurred, switching to the next tab');
 
+/*
       chrome.tabs.query({"currentWindow": true, "windowType": "normal"}, function(tabs) {
         
     
           chrome.extension.getBackgroundPage().console.log('Looping through tabs and tab length = ' + tabs.length);
           
       });
+*/
 
       chrome.extension.getBackgroundPage().console.log('Now looping through all windows to get tab counts');
       
@@ -121,29 +123,76 @@ function loadNextTab(alarm) {
         allWindows.forEach(function(window){
           
 
-          
+          console.log("inside loop for window: " + window.id);
 
           var numTabs = window.tabs.length;
           var tabId = chrome.tabs.TAB_ID_NONE;
           var currentTabId = getCurrentSelectedTab(window.id);
           console.log("window: " + window.id + " has  " + numTabs + " tabs and the currentSelectedTab = " + currentTabId);
-          window.tabs.forEach(function(tab){
-            
-            //console.log(tab.url);
 
-            // not that tab id does not equal the order in which they are currently displayed, so need to use length or order
-            //console.log("window: " + window.id + " | tab: " + tab.id + " | url = " +tab.url);
-            tabId = tab.id;
-          });
+          if(currentTabId == -1)
+          {
+            console.log("querying for active tabs cause currentTabId = -1");
+            chrome.tabs.query({"windowId": window.id, "active": true}, function(tabArr) {
+              if(tabArr.length == 1)
+              {
+                var tab = tabArr[0];
+                console.log("found an active tab");
+                tabId = tab.id;
+                changeTab(window.id, tabId);
+              }
+            });
 
-          //chrome.tabs.update(tabId, {selected: true});
+            console.log("checking tabId got set");
+            if(tabId == -1 && window.tabs.length >0)
+            {
+              tabId = window.tabs[0].id;
+              changeTab(window.id, tabId);
+            }
+          }
+          else
+          {
+            var tabId = 0;
+            var next = 0;
+            var tab;
+            for(i=0; i < window.tabs.length; i++)
+            {
+                tab = window.tabs[i];
+                next = i +1;
+                if(tab.selected && window.tabs.length > next)
+                {
+                  tabId = next;
+                  break;
+                }
+            }
+
+            tabId = window.tabs[tabId].id;
+
+            changeTab(window.id, tabId);
+            /*
+            console.log("currentTabId != -1, so getting that tab for tabId " + currentTabId);
+            chrome.tabs.query({"windowId": window.id, "index": currentTabId}, function(tabArr)
+            {
+              console.log("got a result for the tab by index query - count = " + tabArr.length);
+              if(tabArr.length == 1)
+              {
+                 var tab = tabArr[0];
+                 var tabIndex = tab.index;
+                 if(tabIndex < numTabs -1)
+                 {
+                    tabId = window.tabs[tabIndex+1].id;
+                    changeTab(window.id, tabId);
+                 }
+                 else
+                 {
+                    tabId = window.tabs[0].id;
+                    changeTab(window.id, tabId);
+                 }
+             }
+            });
+            */
+          }
           
-          // gotta use the tabId to set it to be selected;
-
-          chrome.tabs.update(tabId, {"selected": true});
-
-          // write to memory our last open tabs
-          setCurrentSelectedTab(window.id, tabId);;
         });
       });
       
@@ -151,6 +200,19 @@ function loadNextTab(alarm) {
       // wait for next tab
       // if last tab in the browswer, reset wait time to MAIN_TAB_DISPLAY_LENGTH
       // if not first tab in the browser, reset wait time to AUX_TAB_DISPLAY_LENGTH
+}
+
+function changeTab(windowId, tabId) {
+  
+  console.log("inside changeTab for window: " + windowId + "and tab: " + tabId);
+  if(tabId !== undefined)
+  {
+    // gotta use the tabId to set it to be selected;
+    chrome.tabs.update(tabId, {"selected": true});
+
+    // write to memory our last open tabs
+    setCurrentSelectedTab(windowId, tabId);;
+  }
 }
 
 function saveCurrentTabIds() {
@@ -161,11 +223,14 @@ function saveCurrentTabIds() {
     var numWindows = allWindows.length;
     allWindows.forEach(function(window){
       
-      chrome.tabs.query({"windowId": window.id, "active": true}, function(tab) {
-          
-          chrome.extension.getBackgroundPage().console.log('setting currentTabId for window ' + window.id + " to tab id " + tab.id);
+      chrome.tabs.query({"windowId": window.id, "active": true}, function(tabArr) {
+          if(tabArr.length == 1)
+          {
+            var tab = tabArr[0];
+            chrome.extension.getBackgroundPage().console.log('setting currentTabId for window ' + window.id + " to tab id " + tab.id);
 
-          setCurrentSelectedTab(window.id, tab.id);
+            setCurrentSelectedTab(window.id, tab.id);
+          }
           
       });
           
