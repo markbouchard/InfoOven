@@ -7,8 +7,6 @@
 // http://www.agileadvice.com/2005/05/10/bookreviews/information-radiators/
 
 document.addEventListener('DOMContentLoaded', function() {
-  //getCurrentTabUrl(function(url) {
-    //alert("hi. i am here.");
     chrome.extension.getBackgroundPage().console.log('InfoOven loaded, setting status');
     setStatus();
 });
@@ -53,6 +51,8 @@ function startMeUp() {
   
   chrome.alarms.onAlarm.addListener(loadNextTab);
 
+  // get the open tab for each open window and store it
+  saveCurrentTabIds();
 
 }
 
@@ -119,13 +119,31 @@ function loadNextTab(alarm) {
       {
         var numWindows = allWindows.length;
         allWindows.forEach(function(window){
+          
+
+          
+
+          var numTabs = window.tabs.length;
+          var tabId = chrome.tabs.TAB_ID_NONE;
+          var currentTabId = getCurrentSelectedTab(window.id);
+          console.log("window: " + window.id + " has  " + numTabs + " tabs and the currentSelectedTab = " + currentTabId);
           window.tabs.forEach(function(tab){
             
             //console.log(tab.url);
 
             // not that tab id does not equal the order in which they are currently displayed, so need to use length or order
-            console.log("window: " + window.id + " | tab: " + tab.id + " | url = " +tab.url);
+            //console.log("window: " + window.id + " | tab: " + tab.id + " | url = " +tab.url);
+            tabId = tab.id;
           });
+
+          //chrome.tabs.update(tabId, {selected: true});
+          
+          // gotta use the tabId to set it to be selected;
+
+          chrome.tabs.update(tabId, {"selected": true});
+
+          // write to memory our last open tabs
+          setCurrentSelectedTab(window.id, tabId);;
         });
       });
       
@@ -133,9 +151,52 @@ function loadNextTab(alarm) {
       // wait for next tab
       // if last tab in the browswer, reset wait time to MAIN_TAB_DISPLAY_LENGTH
       // if not first tab in the browser, reset wait time to AUX_TAB_DISPLAY_LENGTH
+}
 
+function saveCurrentTabIds() {
 
-    
+  // loop through the windows and set the current open tab for each
+  chrome.windows.getAll({populate: true}, function(allWindows)
+  {
+    var numWindows = allWindows.length;
+    allWindows.forEach(function(window){
+      
+      chrome.tabs.query({"windowId": window.id, "active": true}, function(tab) {
+          
+          chrome.extension.getBackgroundPage().console.log('setting currentTabId for window ' + window.id + " to tab id " + tab.id);
+
+          setCurrentSelectedTab(window.id, tab.id);
+          
+      });
+          
+    });
+
+  });
+
+}
+
+function getCurrentSelectedTab(windowId) {
+  var searchCriteria = "window"+windowId+"CurrentTabId";
+  var currentTabId = localStorage.getItem(searchCriteria);
+
+  chrome.extension.getBackgroundPage().console.log('fetching from localstorage: ' +searchCriteria + " and found: " +currentTabId);
+  // if not set, set it to not running
+  if(currentTabId === undefined || currentTabId == "undefined" || currentTabId == null)
+  {
+    currentTabId = chrome.tabs.TAB_ID_NONE;
+  }
+  
+  currentTabId = JSON.parse(currentTabId);
+
+  return currentTabId;
+  
+}
+
+function setCurrentSelectedTab(windowId, tabId) {
+  // set the current tab open for this window
+
+  chrome.extension.getBackgroundPage().console.log('writing to localstorage: currentTabId for window ' + windowId + " to tab id " + tabId);
+  localStorage.setItem("window"+windowId+"CurrentTabId", tabId);
 }
 
 // React when a browser action's icon is clicked.
