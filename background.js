@@ -46,7 +46,17 @@ function setStatus() {
 
 function startMeUp() {
 
-  startAlarms(0.05);
+  chrome.windows.getAll({populate: true}, function(allWindows)
+  {
+      allWindows.forEach(function(window){
+          startAlarms(window.id, 0.05);
+      });
+
+  });
+
+  chrome.alarms.onAlarm.addListener(loadNextTab);
+
+  //startAlarms("test", 0.05);
 
   // get the open tab for each open window and store it
   saveCurrentTabIds();
@@ -60,12 +70,18 @@ function tearMeDown() {
     
 }
 
-function startAlarms(interval) {
+function startAlarms(windowId, interval) {
 
   //setTimeout( "alert('ping')", 5000); // attempt 1
-  chrome.alarms.create("Start", {periodInMinutes: interval});
+  chrome.alarms.create(windowId.toString(), {periodInMinutes: interval});
   
-  chrome.alarms.onAlarm.addListener(loadNextTab);
+  //chrome.alarms.onAlarm.addListener(loadNextTab);
+}
+
+function clearAlarm(windowId) {
+
+  chrome.alarms.clear(windowId.toString());
+  //chrome.alarms.onAlarm.removeListener(loadNextTab);
 }
 
 function clearAlarms() {
@@ -113,31 +129,22 @@ function flipStatus() {
 
 function loadNextTab(alarm) {
     
-      chrome.extension.getBackgroundPage().console.log('trigger occurred, switching to the next tab');
+      chrome.extension.getBackgroundPage().console.log('trigger occurred, switching to the next tab - alarm id = ' + alarm.name);
 
-/*
-      chrome.tabs.query({"currentWindow": true, "windowType": "normal"}, function(tabs) {
-        
-    
-          chrome.extension.getBackgroundPage().console.log('Looping through tabs and tab length = ' + tabs.length);
-          
-      });
-*/
 
-      chrome.extension.getBackgroundPage().console.log('Now looping through all windows to get tab counts');
-      
-      chrome.windows.getAll({populate: true}, function(allWindows)
+      var winId = parseInt(alarm.name);
+      chrome.windows.get(winId, {populate: true}, function (window)
       {
-        var numWindows = allWindows.length;
-        allWindows.forEach(function(window){
-          
-
-          console.log("inside loop for window: " + window.id);
+        chrome.extension.getBackgroundPage().console.log('FOUND WINDOW FOR ALARM ' + window.id);  
 
           var numTabs = window.tabs.length;
           var tabId = chrome.tabs.TAB_ID_NONE;
           var currentTabId = getCurrentSelectedTab(window.id);
           console.log("window: " + window.id + " has  " + numTabs + " tabs and the currentSelectedTab = " + currentTabId);
+
+          // TODO - investigate using
+          // chrome.tabs.getSelected(integer windowId, function callback)
+          // Deprecated since Chrome 33. Please use tabs.query {active: true}.
 
           if(currentTabId == -1)
           {
@@ -186,11 +193,8 @@ function loadNextTab(alarm) {
             // switch that tab kid!
             changeTab(window.id, tabId, next);
       
-          }
-          
-        });
+          }        
       });
-      
 }
 
 function changeTab(windowId, tabId, indexId) {
@@ -206,17 +210,17 @@ function changeTab(windowId, tabId, indexId) {
 
     if(indexId !== undefined)
     {
-      clearAlarms();
+      clearAlarm(windowId);
       if(indexId == 0)
       {
         // update to long timer
-        startAlarms(1);
+        startAlarms(windowId, 1);
 
       }
       else
       {
         // update to short timer
-        startAlarms(0.05);
+        startAlarms(windowId, 0.05);
       }
     }
   }
