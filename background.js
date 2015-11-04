@@ -6,6 +6,9 @@
 // Read more about information radiators here:
 // http://www.agileadvice.com/2005/05/10/bookreviews/information-radiators/
 
+// globals for localStorage
+var INFOOVEN_RUNNING = "infooven_running";
+
 document.addEventListener('DOMContentLoaded', function() {
     chrome.extension.getBackgroundPage().console.log('InfoOven loaded, setting status');
     setStatus();
@@ -14,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function setStatus() {
   
   // try to retrieve our running status from local storage
-  var running = localStorage.getItem("infoOvenRunning");
+  var running = localStorage.getItem(INFOOVEN_RUNNING);
 
   // if not set, set it to not running
   if(running == null)
@@ -41,8 +44,9 @@ function setStatus() {
     tearMeDown();
   }
 
-  localStorage.setItem("infoOvenRunning", running);
+  localStorage.setItem(INFOOVEN_RUNNING, running);
 }
+
 
 function startMeUp() {
 
@@ -92,7 +96,7 @@ function clearAlarms() {
 function flipStatus() {
   //document.getElementById('status').textContent = statusText;
   // Retrieve
-  var running = localStorage.getItem("infoOvenRunning");
+  var running = localStorage.getItem(INFOOVEN_RUNNING);
 
   if(running == null)
   {
@@ -124,7 +128,7 @@ function flipStatus() {
     
   }
 
-  localStorage.setItem("infoOvenRunning", !running);
+  localStorage.setItem(INFOOVEN_RUNNING, !running);
 }
 
 function loadNextTab(alarm) {
@@ -252,7 +256,7 @@ function saveCurrentTabIds() {
 }
 
 function getCurrentSelectedTab(windowId) {
-  var searchCriteria = "window"+windowId+"CurrentTabId";
+  var searchCriteria = "infooven_window"+windowId+"CurrentTabId";
   var currentTabId = localStorage.getItem(searchCriteria);
 
   chrome.extension.getBackgroundPage().console.log('fetching from localstorage: ' +searchCriteria + " and found: " +currentTabId);
@@ -272,7 +276,7 @@ function setCurrentSelectedTab(windowId, tabId) {
   // set the current tab open for this window
 
   chrome.extension.getBackgroundPage().console.log('writing to localstorage: currentTabId for window ' + windowId + " to tab id " + tabId);
-  localStorage.setItem("window"+windowId+"CurrentTabId", tabId);
+  localStorage.setItem("infooven_window"+windowId+"CurrentTabId", tabId);
 }
 
 // React when a browser action's icon is clicked.
