@@ -1,43 +1,48 @@
 <!DOCTYPE html>
 <html>
-<head>
-<script src="InfoOven.js"></script>
-<style>
-body {
-  font-family: "Trebuchet MS", sans-serif;
-}
+	<head>
+		<script type="text/javascript" src="options.js"></script>
+		<style>
+			body {
+		  		font-family: "Trebuchet MS", sans-serif;
+			}
 
-th {
-  font-weight: normal;
-  text-align: right;
-}
-</style>
-</head>
-<body>
-<h1>InfoOven Options</h1>
+			th {
+		  		font-weight: normal;
+		  		text-align: right;
+			}
+		</style>
+	</head>
+	<body>
 
-<form id="options">
-<table>
-<tr>
-<th><label for="flipWait_ms">First Tab display time:</label></th>
-<td><input atuofocus id="first_tab_display_time_m" name="first_tab_display_time_m" type="number" min="1" step="1" /></td>
-</tr>
-<tr>
-<th><label for="flipWait_ms">Subsequent Tab display time:</label></th>
-<td><input atuofocus id="other_tab_display_time_m" name="other_tab_display_time_m" type="number" min="1" step="1" /></td>
-</tr>
-<tr>
-<th><label for="automaticStart">Start automatically:</label></th>
-<td><input id="automaticStart" name="automaticStart" type="checkbox" /></td>
-</tr>
-</table>
-<br />
-<input type="submit" value="Save" />
-<span id="status"></span>
-</form>
+		<h1><img src="icon-small.png"/> InfoOven Options <img src="icon-small.png"/></h1>
 
-<script>
-new InfoOven.OptionsController(document.forms['options']);
-</script>
-</body>
+		Favorite color:
+		<select id="color">
+		 <option value="red">red</option>
+		 <option value="green">green</option>
+		 <option value="blue">blue</option>
+		 <option value="yellow">yellow</option>
+		</select>
+		<br/>
+		Primary Display Interval (minutes):<input id="primary_interval" type="number" step="0.01" min="0.01" value="0.01" />
+		<br/>
+		Number of Primary tabs:<input id="primary_count" type="number" step="1" min="1" max="10" value="1" />
+		<br/>
+		Secondary Display Interval (minutes):<input id="secondary_interval" type="number" step="0.01" min="0.01" value="0.01" />
+		<br/>
+		<label>
+			Automatically start?   Yes: <input type="radio" id="autoStartYes" label="Yes"/>  No: <input type="radio" id="autoStartNo"/>
+
+		  
+		</label>
+
+		<div id="status"></div>
+		<button id="save">Save</button>
+
+		<script src="options.js"></script>
+
+	</body>
 </html>
+
+									
