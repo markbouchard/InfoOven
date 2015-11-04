@@ -1,4 +1,9 @@
 
+var INFOOVEN_PRIMARY_INTERVAL = "infooven_primary_interval";
+var INFOOVEN_PRIMARY_COUNT = "infooven_primary_count";
+var INFOOVEN_SECONDARY_INTERVAL = "infooven_secondary_interval";
+var INFOOVEN_AUTO_START = "infooven_auto_start";
+
 function save_options() {
 
 	// get the input form values
@@ -13,10 +18,10 @@ function save_options() {
 	chrome.extension.getBackgroundPage().console.log('secondary_interval = ' + secondary_interval);
 	chrome.extension.getBackgroundPage().console.log('autoStartYes = ' + autoStartYes);
 
-	localStorage.setItem("infooven_primary_interval", primary_interval);
-	localStorage.setItem("infooven_primary_count", primary_count);
-	localStorage.setItem("infooven_secondary_interval", secondary_interval);
-	localStorage.setItem("infooven_auto_start", autoStartYes);
+	localStorage.setItem(INFOOVEN_PRIMARY_INTERVAL, primary_interval);
+	localStorage.setItem(INFOOVEN_PRIMARY_COUNT, primary_count);
+	localStorage.setItem(INFOOVEN_SECONDARY_INTERVAL, secondary_interval);
+	localStorage.setItem(INFOOVEN_AUTO_START, autoStartYes);
 
 	chrome.extension.getBackgroundPage().console.log('save_options - auto_start = ' +autoStartYes);
 }
@@ -28,10 +33,10 @@ function restore_options() {
 	chrome.extension.getBackgroundPage().console.log('restore_options loaded');
 
 	// get the ol' items from storage	
-	var primary_interval = localStorage.getItem("infooven_primary_interval") || 1.0;
-    var primary_count = localStorage.getItem("infooven_primary_count") || 1;
-    var secondary_interval = localStorage.getItem("infooven_secondary_interval") || 0.05;
-    var auto_start = localStorage.getItem("infooven_auto_start");
+	var primary_interval = localStorage.getItem(INFOOVEN_PRIMARY_INTERVAL) || 1.0;
+    var primary_count = localStorage.getItem(INFOOVEN_PRIMARY_COUNT) || 1;
+    var secondary_interval = localStorage.getItem(INFOOVEN_SECONDARY_INTERVAL) || 0.05;
+    var auto_start = localStorage.getItem(INFOOVEN_AUTO_START);
 
     // validate auto_start boolean
     if(auto_start != null)

@@ -9,6 +9,12 @@
 // globals for localStorage
 var INFOOVEN_RUNNING = "infooven_running";
 
+// TODO - these are duplicated in options.js
+var INFOOVEN_PRIMARY_INTERVAL = "infooven_primary_interval";
+var INFOOVEN_PRIMARY_COUNT = "infooven_primary_count";
+var INFOOVEN_SECONDARY_INTERVAL = "infooven_secondary_interval";
+var INFOOVEN_AUTO_START = "infooven_auto_start";
+
 document.addEventListener('DOMContentLoaded', function() {
     chrome.extension.getBackgroundPage().console.log('InfoOven loaded, setting status');
     setStatus();
@@ -47,13 +53,71 @@ function setStatus() {
   localStorage.setItem(INFOOVEN_RUNNING, running);
 }
 
+function getPrimaryInterval() {
+
+  var primary_interval = localStorage.getItem(INFOOVEN_PRIMARY_INTERVAL) || 1.0;
+
+  chrome.extension.getBackgroundPage().console.log('getPrimaryInterval returning = ' + primary_interval);
+
+  return JSON.parse(primary_interval);
+}
+
+function getPrimaryCount() {
+
+  var primary_count = localStorage.getItem(INFOOVEN_PRIMARY_COUNT) || 1;
+
+  chrome.extension.getBackgroundPage().console.log('getPrimaryCount returning = ' + primary_count);
+
+  return JSON.parse(primary_count);
+}
+
+function getSecondaryInterval() {
+
+  var secondary_interval = localStorage.getItem(INFOOVEN_SECONDARY_INTERVAL) || 0.05;
+
+  chrome.extension.getBackgroundPage().console.log('getSecondaryInterval returning = ' + secondary_interval);
+
+  return JSON.parse(secondary_interval);
+}
 
 function startMeUp() {
+
+  chrome.extension.getBackgroundPage().console.log('inside startMeUp()');
 
   chrome.windows.getAll({populate: true}, function(allWindows)
   {
       allWindows.forEach(function(window){
-          startAlarms(window.id, 0.05);
+          chrome.extension.getBackgroundPage().console.log('inside startMeUp() - window.id = ' + window.id);
+          chrome.tabs.query({"windowId": window.id, "active": true}, function(tabArr) {
+            chrome.extension.getBackgroundPage().console.log('inside startMeUp() - inside query result for tabs for window.id =  ' + window.id);
+
+            var tabLength  = tabArr.length;
+            var tabId = tabArr.id;
+
+            chrome.extension.getBackgroundPage().console.log('inside startMeUp() - tabLength =  ' + tabLength + " and tabId = " + tabId);
+              
+            if(tabArr.length == 1)
+            {
+              var tab = tabArr[0];
+              chrome.extension.getBackgroundPage().console.log('inside startMeUp() - tabLength =  ' + tabLength + " and tabId = " + tab.id + " and tabIndex = " +tab.index);
+              if(tab.index < getPrimaryCount())
+              {
+                console.log("startingAlarm - using primary interval");
+                startAlarms(window.id, getPrimaryInterval());                
+              }
+              else
+              {
+                console.log("changeTab - using secondary interval");
+                  startAlarms(window.id, getSecondaryInterval());
+              }
+              //tabId = tab.id;
+              //changeTab(window.id, tabId, tab.index);
+            }
+            
+          });
+
+
+          //startAlarms(window.id, 0.05);
       });
 
   });
@@ -144,7 +208,9 @@ function loadNextTab(alarm) {
           var numTabs = window.tabs.length;
           var tabId = chrome.tabs.TAB_ID_NONE;
           var currentTabId = getCurrentSelectedTab(window.id);
-          console.log("window: " + window.id + " has  " + numTabs + " tabs and the currentSelectedTab = " + currentTabId);
+          
+
+          //console.log("window: " + window.id + " has  " + numTabs + " tabs and the currentSelectedTab = " + currentTabId);
 
           // TODO - investigate using
           // chrome.tabs.getSelected(integer windowId, function callback)
@@ -203,7 +269,7 @@ function loadNextTab(alarm) {
 
 function changeTab(windowId, tabId, indexId) {
   
-  console.log("inside changeTab for window: " + windowId + " and tab: " + tabId + " and indexId = " + indexId);
+  //console.log("inside changeTab for window: " + windowId + " and tab: " + tabId + " and indexId = " + indexId);
   if(tabId !== undefined)
   {
     // gotta use the tabId to set it to be selected;
@@ -212,19 +278,23 @@ function changeTab(windowId, tabId, indexId) {
     // write to memory our last open tabs
     setCurrentSelectedTab(windowId, tabId);
 
+    console.log("changeTab - indexId = " +indexId);
     if(indexId !== undefined)
     {
+
       clearAlarm(windowId);
-      if(indexId == 0)
+      if(indexId < getPrimaryCount())
       {
+        console.log("changeTab - using primary interval");
         // update to long timer
-        startAlarms(windowId, 1);
+        startAlarms(windowId, getPrimaryInterval());
 
       }
       else
       {
+        console.log("changeTab - using secondary interval");
         // update to short timer
-        startAlarms(windowId, 0.05);
+        startAlarms(windowId, getSecondaryInterval());
       }
     }
   }
