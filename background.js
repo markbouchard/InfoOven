@@ -96,8 +96,7 @@ function getRefreshInterval(isPrimaryTab) {
     refresh_interval = localStorage.getItem(INFOOVEN_SECONDARY_REFRESH_INTERVAL) || 10.0;
   }
 
-  //chrome.extension.getBackgroundPage().console.log('getPrimaryInterval returning = ' + primary_interval);
-
+  // take the number of minutes and convert it to milliseconds to be used by the refresh timer
   return JSON.parse(refresh_interval) * 60000;
 }
 
@@ -213,6 +212,13 @@ function flipStatus() {
 
   localStorage.setItem(INFOOVEN_RUNNING, !running);
 }
+
+chrome.commands.onCommand.addListener(function(command) {
+  if (command == "toggle-infooven") {
+    flipStatus();
+  }
+});
+
 
 function loadNextTab(alarm) {
     

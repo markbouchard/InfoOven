@@ -17,6 +17,13 @@
     "128": "icon-large.png"
   },
 
+  "commands": {
+    "toggle-infooven": {
+      "suggested_key": { "default": "Alt+Shift+I" },
+      "description": "Toggle InfoOven"
+    }
+  },
+
   "options_page": "options.html",
 
   "browser_action": {
