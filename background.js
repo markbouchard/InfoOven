@@ -35,7 +35,7 @@ function setStatus() {
   var running = localStorage.getItem(INFOOVEN_RUNNING);
 
   // if not set, set it to not running
-  if(running == null)
+  if(running == null || !getAutoStart())
   {
     running = false;
   }
@@ -111,6 +111,13 @@ function getWindowType() {
 
   var window_type = localStorage.getItem(INFOOVEN_WINDOW_TYPE);
   return window_type;
+}
+
+function getAutoStart() {
+
+  var auto_start = localStorage.getItem(INFOOVEN_AUTO_START) || true;
+
+  return JSON.parse(auto_start);
 }
 
 
