@@ -15,8 +15,14 @@ var INFOOVEN_PRIMARY_COUNT = "infooven_primary_count";
 var INFOOVEN_PRIMARY_REFRESH_INTERVAL = "infooven_primary_refresh_interval";
 var INFOOVEN_SECONDARY_INTERVAL = "infooven_secondary_interval";
 var INFOOVEN_SECONDARY_REFRESH_INTERVAL = "infooven_secondary_refresh_interval";
-var INFOOVEN_SECONDARY_REFRESH_INTERVAL = "infooven_window_type";
+
 var INFOOVEN_AUTO_START = "infooven_auto_start";
+var INFOOVEN_WINDOW_TYPE = "infooven_window_type";
+
+var INFOOVEN_WINDOW_TYPE_ALL = "ALL";
+var INFOOVEN_WINDOW_TYPE_FOCUSED = "FOCUSED";
+var INFOOVEN_WINDOW_TYPE_BACKGROUND = "BACKGROUND";
+
 
 document.addEventListener('DOMContentLoaded', function() {
     chrome.extension.getBackgroundPage().console.log('InfoOven loaded, setting status');
@@ -87,6 +93,7 @@ function getRefreshInterval(isPrimaryTab) {
 
   var refresh_interval = undefined;
 
+  console.log("inside getRefreshInterval and isPrimaryTab = " + isPrimaryTab);
   if(isPrimaryTab)
   {
     refresh_interval = localStorage.getItem(INFOOVEN_PRIMARY_REFRESH_INTERVAL) || 10.0;
@@ -95,9 +102,15 @@ function getRefreshInterval(isPrimaryTab) {
   {
     refresh_interval = localStorage.getItem(INFOOVEN_SECONDARY_REFRESH_INTERVAL) || 10.0;
   }
-
+  console.log("inside getRefreshInterval and refresh_interval = " + refresh_interval);
   // take the number of minutes and convert it to milliseconds to be used by the refresh timer
   return JSON.parse(refresh_interval) * 60000;
+}
+
+function getWindowType() {
+
+  var window_type = localStorage.getItem(INFOOVEN_WINDOW_TYPE);
+  return window_type;
 }
 
 
@@ -228,7 +241,19 @@ function loadNextTab(alarm) {
       var winId = parseInt(alarm.name);
       chrome.windows.get(winId, {populate: true}, function (window)
       {
-        chrome.extension.getBackgroundPage().console.log('FOUND WINDOW FOR ALARM ' + window.id);  
+          chrome.extension.getBackgroundPage().console.log('FOUND WINDOW FOR ALARM ' + window.id);  
+
+          var runWindowType = getWindowType();
+
+          console.log("inside loadNextTab and runWindowType = " + runWindowType + " and window.focused = " + window.focused);
+
+          if((runWindowType == INFOOVEN_WINDOW_TYPE_FOCUSED && !window.focused) || (runWindowType == INFOOVEN_WINDOW_TYPE_BACKGROUND && window.focused))
+          {
+            console.log("InfoOven option set to run for only " + runWindowType + " windows, therefore not loading next tab for this window");
+            return;
+          }
+
+          console.log("weird, i am still here");
 
           var numTabs = window.tabs.length;
           var tabId = chrome.tabs.TAB_ID_NONE;
