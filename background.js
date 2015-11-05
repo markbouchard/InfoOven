@@ -12,7 +12,10 @@ var INFOOVEN_RUNNING = "infooven_running";
 // TODO - these are duplicated in options.js
 var INFOOVEN_PRIMARY_INTERVAL = "infooven_primary_interval";
 var INFOOVEN_PRIMARY_COUNT = "infooven_primary_count";
+var INFOOVEN_PRIMARY_REFRESH_INTERVAL = "infooven_primary_refresh_interval";
 var INFOOVEN_SECONDARY_INTERVAL = "infooven_secondary_interval";
+var INFOOVEN_SECONDARY_REFRESH_INTERVAL = "infooven_secondary_refresh_interval";
+var INFOOVEN_SECONDARY_REFRESH_INTERVAL = "infooven_window_type";
 var INFOOVEN_AUTO_START = "infooven_auto_start";
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -57,7 +60,7 @@ function getPrimaryInterval() {
 
   var primary_interval = localStorage.getItem(INFOOVEN_PRIMARY_INTERVAL) || 1.0;
 
-  chrome.extension.getBackgroundPage().console.log('getPrimaryInterval returning = ' + primary_interval);
+  //chrome.extension.getBackgroundPage().console.log('getPrimaryInterval returning = ' + primary_interval);
 
   return JSON.parse(primary_interval);
 }
@@ -66,7 +69,7 @@ function getPrimaryCount() {
 
   var primary_count = localStorage.getItem(INFOOVEN_PRIMARY_COUNT) || 1;
 
-  chrome.extension.getBackgroundPage().console.log('getPrimaryCount returning = ' + primary_count);
+  //chrome.extension.getBackgroundPage().console.log('getPrimaryCount returning = ' + primary_count);
 
   return JSON.parse(primary_count);
 }
@@ -75,10 +78,29 @@ function getSecondaryInterval() {
 
   var secondary_interval = localStorage.getItem(INFOOVEN_SECONDARY_INTERVAL) || 0.05;
 
-  chrome.extension.getBackgroundPage().console.log('getSecondaryInterval returning = ' + secondary_interval);
+  //chrome.extension.getBackgroundPage().console.log('getSecondaryInterval returning = ' + secondary_interval);
 
   return JSON.parse(secondary_interval);
 }
+
+function getRefreshInterval(isPrimaryTab) {
+
+  var refresh_interval = undefined;
+
+  if(isPrimaryTab)
+  {
+    refresh_interval = localStorage.getItem(INFOOVEN_PRIMARY_REFRESH_INTERVAL) || 10.0;
+  }
+  else
+  {
+    refresh_interval = localStorage.getItem(INFOOVEN_SECONDARY_REFRESH_INTERVAL) || 10.0;
+  }
+
+  //chrome.extension.getBackgroundPage().console.log('getPrimaryInterval returning = ' + primary_interval);
+
+  return JSON.parse(refresh_interval) * 60000;
+}
+
 
 function startMeUp() {
 
@@ -107,17 +129,12 @@ function startMeUp() {
               }
               else
               {
-                console.log("changeTab - using secondary interval");
+                console.log("startingAlarm - using secondary interval");
                   startAlarms(window.id, getSecondaryInterval());
               }
-              //tabId = tab.id;
-              //changeTab(window.id, tabId, tab.index);
             }
             
           });
-
-
-          //startAlarms(window.id, 0.05);
       });
 
   });
@@ -135,7 +152,9 @@ function tearMeDown() {
   
   //Clears existing alarm
   clearAlarms();
-    
+
+  // clear our hash of refresh times
+  refreshTabHash = new Object();
 }
 
 function startAlarms(windowId, interval) {
@@ -225,7 +244,7 @@ function loadNextTab(alarm) {
                 var tab = tabArr[0];
                 console.log("found an active tab");
                 tabId = tab.id;
-                changeTab(window.id, tabId, tab.index);
+                changeTab(window.id, tabId, tab.index, tab.url);
               }
             });
 
@@ -234,7 +253,7 @@ function loadNextTab(alarm) {
             {
               var tab = tabArr[0];
               tabId = tab.id;
-              changeTab(window.id, tabId, tab.index);
+              changeTab(window.id, tabId, tab.index, tab.url);
             }
           }
           else
@@ -257,23 +276,102 @@ function loadNextTab(alarm) {
                 }
             }
 
+            // get the tab
+            tab = window.tabs[next];
             // get the id for the tab we're about to switch to
-            tabId = window.tabs[next].id;
+            tabId = tab.id;
 
             // switch that tab kid!
-            changeTab(window.id, tabId, next);
+            changeTab(window.id, tabId, next, tab.url);
       
           }        
       });
 }
 
-function changeTab(windowId, tabId, indexId) {
+
+/*
+
+var hash = new Object();
+
+//You can add in these ways:
+
+hash.January='1';
+hash['Feb']='2';
+
+//For length:
+console.log(Object.keys(hash).length)
+
+//To fetch by key:
+console.log(hash['Feb']) // '2'
+
+//To fetch all:
+for(var key in hash){
+    console.log('key is :' + key + ' and value is : '+ hash[key])
+}
+
+///////////////
+
+
+reload: (tabId) ->
+    now_ms = Date.now()
+    lastReload_ms = @lastReloads_ms[tabId]
+  
+    if !lastReload_ms || (now_ms - lastReload_ms >= Options.defaults.reloadWait_ms)
+      # If a tab fails reloading, the host shows up as chrome://chromewebdata/
+      # Protocol chrome:// URLs can't be reloaded through script injection, but you can simulate a reload using tabs.update.
+      chrome.tabs.get tabId, (t) =>
+        chrome.tabs.update(tabId, url: t.url)
+      @lastReloads_ms[tabId] = now_ms
+
+
+*/
+
+var refreshTabHash = new Object();
+
+function changeTab(windowId, tabId, indexId, url) {
   
   //console.log("inside changeTab for window: " + windowId + " and tab: " + tabId + " and indexId = " + indexId);
+
+  var isPrimaryTab = indexId < getPrimaryCount();
+
   if(tabId !== undefined)
   {
+
+    var lastRefresh = refreshTabHash[tabId];
+
+    var now_ms = Date.now();
+    if(lastRefresh === undefined)
+    {
+      console.log("last refresh is NOT DEFINED | could setting to now: " + Date.now()); 
+      refreshTabHash[tabId] = now_ms;
+      chrome.tabs.update(tabId, {"selected": true});   
+    }
+    else
+    {
+      console.log("lastRefresh = " + lastRefresh);
+      var t = now_ms - lastRefresh;
+      console.log("difference = " + t);
+      console.log("Refresh Interval = " + getRefreshInterval(isPrimaryTab));
+
+
+
+      if(now_ms - lastRefresh >= getRefreshInterval(isPrimaryTab))
+      {
+        console.log("REFRESH SELECTION AND URL: " + Date.now()); 
+          // time for a refresh
+          chrome.tabs.update(tabId, {"selected": true, "url": url});
+          refreshTabHash[tabId] = now_ms;      
+      }
+      else
+      {
+        console.log("refresh selection only: " + Date.now()); 
+          // just set the tab to be selected
+          chrome.tabs.update(tabId, {"selected": true});   
+      }
+    }
     // gotta use the tabId to set it to be selected;
-    chrome.tabs.update(tabId, {"selected": true});
+    //chrome.tabs.update(tabId, {"selected": true, "url": url});
+    //chrome.tabs.update(tabId, {"selected": true});
 
     // write to memory our last open tabs
     setCurrentSelectedTab(windowId, tabId);
