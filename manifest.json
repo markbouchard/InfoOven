@@ -2,7 +2,7 @@
   "manifest_version": 2,
 
   "name": "InfoOven",
-  "description": "Chrome Extension that allows you to set up information radiators on large screens by cycling through chrome tabs. Configurable 'primary' intervals and secondary intervals. Works per browser window",
+  "description": "Chrome Extension that allows you to set up information radiators on large screens by cycling through chrome tabs. Configurable 'primary' intervals and secondary intervals. Works with multiple browser windows.",
   "version": "0.5",
 
   "homepage_url": "http://github.com/markbouchard/InfoOven",
