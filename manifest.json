@@ -2,11 +2,19 @@
   "manifest_version": 2,
 
   "name": "InfoOven",
-  "description": "This extension shows a Google Image search result for the current page",
-  "version": "0.1",
+  "description": "Chrome Extension that allows you to set up information radiators on large screens by cycling through chrome tabs. Configurable 'primary' intervals and secondary intervals. Works per browser window",
+  "version": "0.5",
+
+  "homepage_url": "http://github.com/markbouchard/InfoOven",
 
   "background": {
     "scripts": ["background.js"]
+  },
+
+  "icons": {
+    "16": "icon-small.png",
+    "48": "icon-medium.png",
+    "128": "icon-large.png"
   },
 
   "options_page": "options.html",
