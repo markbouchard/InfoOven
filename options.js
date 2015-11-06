@@ -51,6 +51,8 @@ function save_options() {
 	localStorage.setItem(INFOOVEN_SECONDARY_REFRESH_INTERVAL, secondary_refresh_interval);
 	localStorage.setItem(INFOOVEN_AUTO_START, autoStartYes);
 	localStorage.setItem(INFOOVEN_WINDOW_TYPE, windowType);
+	
+	//document.getElementById('status').innerHTML = "all options saved";
 
 	chrome.extension.getBackgroundPage().console.log('save_options - auto_start = ' +autoStartYes);
 }
