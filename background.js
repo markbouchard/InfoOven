@@ -67,7 +67,7 @@ function setStatus() {
 
 function getPrimaryInterval() {
 
-  var primary_interval = localStorage.getItem(INFOOVEN_PRIMARY_INTERVAL) || 1.0;
+  var primary_interval = localStorage.getItem(INFOOVEN_PRIMARY_INTERVAL) || 0.15;
 
   //chrome.extension.getBackgroundPage().console.log('getPrimaryInterval returning = ' + primary_interval);
 

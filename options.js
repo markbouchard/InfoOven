@@ -64,11 +64,11 @@ function restore_options() {
 	chrome.extension.getBackgroundPage().console.log('restore_options loaded');
 
 	// get the ol' items from storage	
-	var primary_interval = localStorage.getItem(INFOOVEN_PRIMARY_INTERVAL) || 1.0;
+	var primary_interval = localStorage.getItem(INFOOVEN_PRIMARY_INTERVAL) || 0.15;
     var primary_count = localStorage.getItem(INFOOVEN_PRIMARY_COUNT) || 1;
-    var primary_refresh_interval = localStorage.getItem(INFOOVEN_PRIMARY_REFRESH_INTERVAL) || 1.0;
+    var primary_refresh_interval = localStorage.getItem(INFOOVEN_PRIMARY_REFRESH_INTERVAL) || 10.0;
     var secondary_interval = localStorage.getItem(INFOOVEN_SECONDARY_INTERVAL) || 0.05;
-    var secondary_refresh_interval = localStorage.getItem(INFOOVEN_SECONDARY_REFRESH_INTERVAL) || 1.0;
+    var secondary_refresh_interval = localStorage.getItem(INFOOVEN_SECONDARY_REFRESH_INTERVAL) || 10.0;
     var auto_start = localStorage.getItem(INFOOVEN_AUTO_START);
     var window_type = localStorage.getItem(INFOOVEN_WINDOW_TYPE);
 
@@ -85,7 +85,7 @@ function restore_options() {
 	}
 
 	// TODO - revisit these setters for more modern setting/getting
-	
+
 	// set the items in the page 
 	document.getElementById('primary_interval').value = primary_interval;
 	document.getElementById('primary_count').value = primary_count;
@@ -97,7 +97,9 @@ function restore_options() {
 	document.getElementById('autoStartYes').checked = auto_start;	
 	document.getElementById('autoStartNo').checked = !auto_start;		
 
-	document.getElementById('windowTypeAll').checked = window_type == INFOOVEN_WINDOW_TYPE_ALL;
+	chrome.extension.getBackgroundPage().console.log("inside restore options and window_type = " + window_type);
+
+	document.getElementById('windowTypeAll').checked = window_type == INFOOVEN_WINDOW_TYPE_ALL || window_type == null;
 	document.getElementById('windowTypeFocused').checked = window_type == INFOOVEN_WINDOW_TYPE_FOCUSED;
 	document.getElementById('windowTypeBackground').checked = window_type == INFOOVEN_WINDOW_TYPE_BACKGROUND;		
 
