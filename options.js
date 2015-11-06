@@ -84,6 +84,8 @@ function restore_options() {
 		auto_start = true;
 	}
 
+	// TODO - revisit these setters for more modern setting/getting
+	
 	// set the items in the page 
 	document.getElementById('primary_interval').value = primary_interval;
 	document.getElementById('primary_count').value = primary_count;

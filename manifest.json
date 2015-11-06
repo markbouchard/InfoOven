@@ -2,8 +2,8 @@
   "manifest_version": 2,
 
   "name": "InfoOven",
-  "description": "Allows you to set up information radiators on large screens by cycling through tabs. Configurable primary + secondary intervals. Works with multiple browser windows.",
-  "version": "0.5",
+  "description": "Maximize large screen displays using rotating chrome tabs to display your most important information. Highly configurable.",
+  "version": "1.0",
 
   "homepage_url": "http://github.com/markbouchard/InfoOven",
 

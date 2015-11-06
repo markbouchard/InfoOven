@@ -1,6 +1,9 @@
 // Copyright (c) 2015 Mark Bouchard. All rights reserved.
 // Use of this source code is governed by a GPL license that can be
 // found in the LICENSE file.
+
+// This was a hackweek project so it's not overly elegant, but it is functional!
+
 // The goal of this Chrome extension is to allow an automatic cycle through an open browswer's tabs. 
 // This should allow you to put this on a large screen to act as an information radiator for your team or business. 
 // Read more about information radiators here:
@@ -93,7 +96,7 @@ function getRefreshInterval(isPrimaryTab) {
 
   var refresh_interval = undefined;
 
-  console.log("inside getRefreshInterval and isPrimaryTab = " + isPrimaryTab);
+  //console.log("inside getRefreshInterval and isPrimaryTab = " + isPrimaryTab);
   if(isPrimaryTab)
   {
     refresh_interval = localStorage.getItem(INFOOVEN_PRIMARY_REFRESH_INTERVAL) || 10.0;
@@ -102,7 +105,8 @@ function getRefreshInterval(isPrimaryTab) {
   {
     refresh_interval = localStorage.getItem(INFOOVEN_SECONDARY_REFRESH_INTERVAL) || 10.0;
   }
-  console.log("inside getRefreshInterval and refresh_interval = " + refresh_interval);
+  //console.log("inside getRefreshInterval and refresh_interval = " + refresh_interval);
+  
   // take the number of minutes and convert it to milliseconds to be used by the refresh timer
   return JSON.parse(refresh_interval) * 60000;
 }
@@ -160,8 +164,6 @@ function startMeUp() {
 
   chrome.alarms.onAlarm.addListener(loadNextTab);
 
-  //startAlarms("test", 0.05);
-
   // get the open tab for each open window and store it
   saveCurrentTabIds();
 
@@ -173,7 +175,7 @@ function tearMeDown() {
   clearAlarms();
 
   // clear our hash of refresh times
-  refreshTabHash = new Object();
+  m_refreshTabHash = new Object();
 }
 
 function startAlarms(windowId, interval) {
@@ -233,13 +235,6 @@ function flipStatus() {
   localStorage.setItem(INFOOVEN_RUNNING, !running);
 }
 
-chrome.commands.onCommand.addListener(function(command) {
-  if (command == "toggle-infooven") {
-    flipStatus();
-  }
-});
-
-
 function loadNextTab(alarm) {
     
       chrome.extension.getBackgroundPage().console.log('trigger occurred, switching to the next tab - alarm id = ' + alarm.name);
@@ -260,33 +255,25 @@ function loadNextTab(alarm) {
             return;
           }
 
-          console.log("weird, i am still here");
-
           var numTabs = window.tabs.length;
           var tabId = chrome.tabs.TAB_ID_NONE;
           var currentTabId = getCurrentSelectedTab(window.id);
           
-
-          //console.log("window: " + window.id + " has  " + numTabs + " tabs and the currentSelectedTab = " + currentTabId);
-
-          // TODO - investigate using
-          // chrome.tabs.getSelected(integer windowId, function callback)
-          // Deprecated since Chrome 33. Please use tabs.query {active: true}.
-
+          // if the currentTabId is not set, go about finding the active window
           if(currentTabId == -1)
           {
             console.log("querying for active tabs cause currentTabId = -1");
             chrome.tabs.query({"windowId": window.id, "active": true}, function(tabArr) {
+              // should only have 1 active tab
               if(tabArr.length == 1)
               {
                 var tab = tabArr[0];
-                console.log("found an active tab");
                 tabId = tab.id;
                 changeTab(window.id, tabId, tab.index, tab.url);
               }
             });
 
-            console.log("checking tabId got set");
+            // validate tabId is set
             if(tabId == -1 && window.tabs.length >0)
             {
               var tab = tabArr[0];
@@ -326,45 +313,9 @@ function loadNextTab(alarm) {
       });
 }
 
-
-/*
-
-var hash = new Object();
-
-//You can add in these ways:
-
-hash.January='1';
-hash['Feb']='2';
-
-//For length:
-console.log(Object.keys(hash).length)
-
-//To fetch by key:
-console.log(hash['Feb']) // '2'
-
-//To fetch all:
-for(var key in hash){
-    console.log('key is :' + key + ' and value is : '+ hash[key])
-}
-
-///////////////
-
-
-reload: (tabId) ->
-    now_ms = Date.now()
-    lastReload_ms = @lastReloads_ms[tabId]
-  
-    if !lastReload_ms || (now_ms - lastReload_ms >= Options.defaults.reloadWait_ms)
-      # If a tab fails reloading, the host shows up as chrome://chromewebdata/
-      # Protocol chrome:// URLs can't be reloaded through script injection, but you can simulate a reload using tabs.update.
-      chrome.tabs.get tabId, (t) =>
-        chrome.tabs.update(tabId, url: t.url)
-      @lastReloads_ms[tabId] = now_ms
-
-
-*/
-
-var refreshTabHash = new Object();
+// global object to store when each tab last refreshed
+// stores tabId as key and the time of the last refresh as the value
+var m_refreshTabHash = new Object();
 
 function changeTab(windowId, tabId, indexId, url) {
   
@@ -375,13 +326,13 @@ function changeTab(windowId, tabId, indexId, url) {
   if(tabId !== undefined)
   {
 
-    var lastRefresh = refreshTabHash[tabId];
+    var lastRefresh = m_refreshTabHash[tabId];
 
     var now_ms = Date.now();
     if(lastRefresh === undefined)
     {
       console.log("last refresh is NOT DEFINED | could setting to now: " + Date.now()); 
-      refreshTabHash[tabId] = now_ms;
+      m_refreshTabHash[tabId] = now_ms;
       chrome.tabs.update(tabId, {"selected": true});   
     }
     else
@@ -398,7 +349,7 @@ function changeTab(windowId, tabId, indexId, url) {
         console.log("REFRESH SELECTION AND URL: " + Date.now()); 
           // time for a refresh
           chrome.tabs.update(tabId, {"selected": true, "url": url});
-          refreshTabHash[tabId] = now_ms;      
+          m_refreshTabHash[tabId] = now_ms;      
       }
       else
       {
@@ -407,11 +358,8 @@ function changeTab(windowId, tabId, indexId, url) {
           chrome.tabs.update(tabId, {"selected": true});   
       }
     }
-    // gotta use the tabId to set it to be selected;
-    //chrome.tabs.update(tabId, {"selected": true, "url": url});
-    //chrome.tabs.update(tabId, {"selected": true});
-
-    // write to memory our last open tabs
+    
+    // write to storage our last open tabs
     setCurrentSelectedTab(windowId, tabId);
 
     console.log("changeTab - indexId = " +indexId);
@@ -485,13 +433,22 @@ function setCurrentSelectedTab(windowId, tabId) {
   localStorage.setItem("infooven_window"+windowId+"CurrentTabId", tabId);
 }
 
+// React when our special command is hit
+chrome.commands.onCommand.addListener(function(command) {
+  if (command == "toggle-infooven") {
+    chrome.extension.getBackgroundPage().console.log('InfoOven command received.');
+
+    // get up and get going
+    flipStatus();
+  }
+});
+
 // React when a browser action's icon is clicked.
 chrome.browserAction.onClicked.addListener(function(tab) {
-  //alert("hello world");
 
-  chrome.extension.getBackgroundPage().console.log('clicked on the infooven icon');
+  chrome.extension.getBackgroundPage().console.log('InfoOven icon clicked.');
 
-  // user clicked us, update our status based on 
+  // get up and get going
   flipStatus();
 
 
