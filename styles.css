@@ -1,0 +1,13 @@
+.options-body { background:#DDEEFF;}
+
+.options-header { background:#DDEEFF; padding: 10px; padding-left: 50px; padding-right: 50px; display: block; width: 650px; text-align: center; margin: 0 auto; }
+
+.options-description { padding: 10px; padding-left: 50px; padding-right: 50px; width: 650px; display: block; background: #FAFAFA; margin: 0 auto; }
+
+.options-form { padding: 10px; padding-left: 50px; padding-right: 50px; width: 650px; display: block; background: #FAFAFA; margin: 0 auto; }
+
+.options-form .field { padding: 4px; margin:1px; background: #eee; border: 4px; border-color: black;}
+
+.options-form .field label { display:inline-block; width:250px; margin-left:0px; }
+
+.options-form .field input { display:inline-block; width:50px;}
