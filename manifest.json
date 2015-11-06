@@ -4,6 +4,8 @@
   "name": "InfoOven",
   "description": "Maximize large screen displays using rotating chrome tabs to display your most important information. Highly configurable.",
   "version": "1.0",
+  "author": "Mark Bouchard",
+  "short_name": "InfoOven Multi-Tab Viewer",
 
   "homepage_url": "http://github.com/markbouchard/InfoOven",
 
@@ -12,9 +14,9 @@
   },
 
   "icons": {
-    "16": "icon-small.png",
-    "48": "icon-medium.png",
-    "128": "icon-large.png"
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
   },
 
   "commands": {
